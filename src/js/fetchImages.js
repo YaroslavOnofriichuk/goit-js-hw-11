@@ -11,6 +11,5 @@ export default async function fetchImages (image, page) {
     const response = await axios.get(`${BASE_URL}?key=${key}&q=${image}&image_type=${imageType}&orientation=${orientation}&safesearch=${safesearch}&page=${page}&per_page=${perPage}`);
     const images = await response.data;
 
-    console.log(response.data.totalHits);
     return images;
 };

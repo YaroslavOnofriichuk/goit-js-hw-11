@@ -12,9 +12,11 @@ const loadMoreBtn = document.querySelector(".load-more");
 
 let page = 1;
 let searchImage = "";
+let gallery = new SimpleLightbox('.gallery a');
 
 formEl.addEventListener("submit", onSubmitBtnClick);
 loadMoreBtn.addEventListener("click", onLoadMoreBtnClick);
+
 
 async function onSubmitBtnClick (event) {
     event.preventDefault();
@@ -29,6 +31,7 @@ async function onSubmitBtnClick (event) {
           }
               galleryEl.innerHTML = "";
               galleryEl.insertAdjacentHTML("beforeend", createMarkup(images));
+              gallery.refresh();
               page = 1;
               loadMoreBtn.classList.remove("is-hidden");
               checkEndOfImages(images);
@@ -44,22 +47,28 @@ async function onLoadMoreBtnClick () {
     try {
         const images = await fetchImages (searchImage, page);
         galleryEl.insertAdjacentHTML("beforeend", createMarkup(images));
+        gallery.refresh();
         loadMoreBtn.classList.remove("is-hidden");
+        Notify.success(`Hooray! We found ${images.totalHits} images.`);
         checkEndOfImages(images);
     }   
         catch (error) {
         Notify.failure(error.message);
     }
+
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
+
+    window.scrollBy({
+      top: cardHeight * 2 + 180,
+      behavior: 'smooth',
+    });
 };
 
 function checkEndOfImages (images) {
     if (images.totalHits / 40 < page) {
         Notify.warning("We're sorry, but you've reached the end of search results.");
         loadMoreBtn.classList.add("is-hidden");
-    }
+    }   
 };
-
-const gallery = new SimpleLightbox(".gallery a");
-
-
-
