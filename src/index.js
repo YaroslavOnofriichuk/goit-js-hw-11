@@ -1,31 +1,65 @@
-import debounce from 'lodash.debounce';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import SimpleLightbox from 'simplelightbox';
 import './css/styles.css';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+import fetchImages from './js/fetchImages';
+import createMarkup from './js/createMarkup';
 
-const DEBOUNCE_DELAY = 300;
 
-const refs = {
-    input: document.querySelector("#search-box"),
-    list: document.querySelector(".country-list"),
-    info: document.querySelector(".country-info"),
+const formEl = document.querySelector("#search-form");
+const galleryEl = document.querySelector(".gallery");
+const loadMoreBtn = document.querySelector(".load-more");
+
+let page = 1;
+let searchImage = "";
+
+formEl.addEventListener("submit", onSubmitBtnClick);
+loadMoreBtn.addEventListener("click", onLoadMoreBtnClick);
+
+async function onSubmitBtnClick (event) {
+    event.preventDefault();
+    if (event.currentTarget.searchQuery.value.trim() === "") {
+        Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+    }   
+      searchImage = event.currentTarget.searchQuery.value;
+      try {
+          const images = await fetchImages (searchImage, page);
+          if (images.length === 0) {
+              Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+          }
+              galleryEl.innerHTML = "";
+              galleryEl.insertAdjacentHTML("beforeend", createMarkup(images));
+              page = 1;
+              loadMoreBtn.classList.remove("is-hidden");
+              checkEndOfImages(images);
+      }   
+          catch (error) {
+             Notify.failure(error.message);
+      }
 };
 
-// refs.input.addEventListener("input", debounce(searchCountries, DEBOUNCE_DELAY));
+async function onLoadMoreBtnClick () {
+    loadMoreBtn.classList.add("is-hidden");
+    page += 1;
+    try {
+        const images = await fetchImages (searchImage, page);
+        galleryEl.insertAdjacentHTML("beforeend", createMarkup(images));
+        loadMoreBtn.classList.remove("is-hidden");
+        checkEndOfImages(images);
+    }   
+        catch (error) {
+        Notify.failure(error.message);
+    }
+};
 
-// function searchCountries (e) {
-//     if (e.target.value.trim() !== "") {
-//         fetchCountries(e.target.value.trim()).then(data => {
-//             if (data.length > 10) {
-//                 Notify.info("Too many matches found. Please enter a more specific name.");
-//                 refs.list.innerHTML = "";
-//                 refs.info.innerHTML = "";
-//             } else if (data.length >= 2 && data.length <= 10) {
-//                 refs.list.innerHTML = createListMarkup(data);
-//                 refs.info.innerHTML = "";
-//             }  else {
-//                 refs.info.innerHTML = createInfoMarkup(data);
-//                 refs.list.innerHTML = "";
-//             }
-//         }).catch((error) => Notify.failure("Oops, there is no country with that name"));
-//     }
-// };
+function checkEndOfImages (images) {
+    if (images.totalHits / 40 < page) {
+        Notify.warning("We're sorry, but you've reached the end of search results.");
+        loadMoreBtn.classList.add("is-hidden");
+    }
+};
+
+const gallery = new SimpleLightbox(".gallery a");
+
+
+
