@@ -24,6 +24,7 @@ async function onSubmitBtnClick (event) {
         Notify.failure("Sorry, there are no images matching your search query. Please try again.");
     }   
       searchImage = event.currentTarget.searchQuery.value;
+      page = 1;
       try {
           const images = await fetchImages (searchImage, page);
           if (images.length === 0) {
@@ -32,7 +33,6 @@ async function onSubmitBtnClick (event) {
               galleryEl.innerHTML = "";
               galleryEl.insertAdjacentHTML("beforeend", createMarkup(images));
               gallery.refresh();
-              page = 1;
               loadMoreBtn.classList.remove("is-hidden");
               checkEndOfImages(images);
       }   
